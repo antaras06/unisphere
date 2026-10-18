@@ -104,7 +104,7 @@ curl http://127.0.0.1:8000/health      # {"status":"ok"}
 server {
     listen 80;
     server_name unisphere.example.com;
-    client_max_body_size 30M;          # must be >= MAX_CONTENT_LENGTH_MB
+    client_max_body_size 10M;          # must be >= MAX_UPLOAD_MB
 
     location /static/ {
         alias /srv/unisphere/app/app/static/;

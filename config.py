@@ -20,7 +20,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
 
-    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", str(BASE_DIR / "instance" / "uploads"))
+    # Relative paths are resolved against the project root so `UPLOAD_FOLDER=instance/uploads`
+    # works from any working directory (Flask would otherwise resolve them against app/).
+    UPLOAD_FOLDER = str((BASE_DIR / os.getenv("UPLOAD_FOLDER", "instance/uploads")).resolve())
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_UPLOAD_MB", "5")) * 1024 * 1024
     MAX_IMAGES_PER_LISTING = int(os.getenv("MAX_IMAGES_PER_LISTING", "5"))
     ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}

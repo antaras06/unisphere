@@ -90,7 +90,8 @@ See `.env.example`. Key ones:
 | `DATABASE_URL` | `mysql+pymysql://user:pass@host:3306/unisphere?charset=utf8mb4` |
 | `TEST_DATABASE_URL` | Separate DB used by pytest (tables are created and dropped). |
 | `UPLOAD_FOLDER` | Absolute path where listing images are stored (default `instance/uploads`). Must be persistent. |
-| `MAX_CONTENT_LENGTH_MB` | Request size cap (default 25). Per-image cap is `MAX_IMAGE_SIZE_MB` (default 5). |
+| `MAX_UPLOAD_MB` | Max request/upload size in MB (default 5). |
+| `MAX_IMAGES_PER_LISTING` | Images allowed per listing (default 5). |
 | `SOCKETIO_ASYNC_MODE` | `eventlet` (default) or `threading`. |
 | `SOCKETIO_MESSAGE_QUEUE` | e.g. `redis://localhost:6379/0` when running more than one worker. |
 | `SESSION_COOKIE_SECURE` | Set `true` behind HTTPS. |
