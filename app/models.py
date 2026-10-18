@@ -161,7 +161,8 @@ class Conversation(TimestampMixin, db.Model):
 
     @property
     def last_message(self):
-        return self.messages.order_by(Message.created_at.desc(), Message.id.desc()).first()
+        # order_by(None) clears the relationship's default ascending order before reversing it
+        return self.messages.order_by(None).order_by(Message.created_at.desc(), Message.id.desc()).first()
 
     def unread_count_for(self, user):
         return self.messages.filter(Message.sender_id != user.id, Message.is_read.is_(False)).count()

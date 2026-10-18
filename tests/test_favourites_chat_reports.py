@@ -138,3 +138,16 @@ def test_csrf_enforced_when_enabled(app, alice):
         assert r.status_code == 400
     finally:
         app.config["WTF_CSRF_ENABLED"] = False
+
+
+def test_last_message_is_latest(client, alice, bob, db):
+    from datetime import datetime, timedelta
+
+    listing = make_listing(client, alice)
+    conv = Conversation(listing=listing, buyer=bob, seller=alice)
+    db.session.add(conv)
+    base = datetime(2026, 1, 1, 10, 0)
+    for i, body in enumerate(["first", "second", "third"]):
+        db.session.add(Message(conversation=conv, sender=bob, body=body, created_at=base + timedelta(minutes=i)))
+    db.session.commit()
+    assert conv.last_message.body == "third"

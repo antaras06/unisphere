@@ -36,7 +36,8 @@ html, body { font-family: "Poppins", system-ui, sans-serif; color: var(--us-text
 /* Header */
 .us-header { border-bottom: 1px solid var(--us-divider); z-index: 1030; }
 .navbar-brand span { font-size: 1.35rem; letter-spacing: -0.02em; }
-.nav-link { font-weight: 500; color: var(--us-text); border-radius: 8px; padding: .45rem .8rem !important; }
+.nav-link { font-weight: 500; color: var(--us-text); border-radius: 8px; padding: .45rem .8rem !important; white-space: nowrap; }
+.navbar .btn { white-space: nowrap; }
 .nav-link:hover { color: var(--us-primary); background: var(--us-primary-soft); }
 .nav-link.active { color: var(--us-primary); }
 .us-search .input-group-text { border-radius: 10px 0 0 10px; }
@@ -123,7 +124,7 @@ html, body { font-family: "Poppins", system-ui, sans-serif; color: var(--us-text
 .us-conv-item { display: flex; gap: .75rem; padding: .85rem 1rem; border-bottom: 1px solid var(--us-divider); text-decoration: none; color: var(--us-text); transition: background .12s; }
 .us-conv-item:hover { background: var(--us-surface); }
 .us-conv-item.active { background: var(--us-primary-soft); }
-.us-conv-item .us-conv-thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--us-surface); }
+.us-conv-thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--us-surface); }
 .us-conv-item .us-conv-name { font-weight: 600; font-size: .92rem; }
 .us-conv-item .us-conv-preview { font-size: .82rem; color: var(--us-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .us-conv-item.has-unread .us-conv-preview { color: var(--us-text); font-weight: 500; }
