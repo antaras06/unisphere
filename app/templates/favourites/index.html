@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card, empty_state with context %}
+{% block title %}Favourites{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 fw-700 mb-0"><i class="bi bi-heart-fill text-danger me-2"></i>Favourites</h1>
+    <span class="text-secondary small">{{ favourites|length }} saved</span>
+  </div>
+  {% if favourites %}
+  <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4" id="favGrid">
+    {% for fav in favourites %}
+    <div class="col" data-fav-card>{{ listing_card(fav.listing, is_fav=True, remove_on_unsave=True) }}</div>
+    {% endfor %}
+  </div>
+  <p class="text-secondary small mt-3"><i class="bi bi-info-circle me-1"></i>Items marked <strong>SOLD</strong> are no longer available but stay here until you remove them.</p>
+  {% else %}
+  {{ empty_state('bi-heart', 'No favourites yet', 'Tap the heart on any listing to save it for later.', url_for('listings.browse'), 'Browse listings') }}
+  {% endif %}
+</div>
+{% endblock %}

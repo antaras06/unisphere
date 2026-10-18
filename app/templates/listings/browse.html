@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card, empty_state with context %}
+{% block title %}{% if filters.q %}“{{ filters.q }}” · {% endif %}Browse listings{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+      <h1 class="h3 fw-700 mb-1">{% if filters.category %}{{ filters.category }}{% else %}Browse listings{% endif %}</h1>
+      <div class="text-secondary small">
+        {{ pagination.total }} result{{ '' if pagination.total == 1 else 's' }}{% if filters.q %} for “<strong>{{ filters.q }}</strong>”{% endif %}
+      </div>
+    </div>
+    <form method="get" class="d-flex align-items-center gap-2" id="sortForm" data-no-loading>
+      {% for k, v in filters.items() if k != 'sort' and v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <label class="small text-secondary text-nowrap" for="sort">Sort by</label>
+      <select class="form-select form-select-sm" name="sort" id="sort" onchange="this.form.submit()">
+        {% for key, label in SORT_OPTIONS.items() %}<option value="{{ key }}" {{ 'selected' if filters.sort == key }}>{{ label }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-outline-primary btn-sm d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel"><i class="bi bi-funnel"></i> Filters</button>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    <aside class="col-lg-3">
+      <div class="collapse d-lg-block" id="filterPanel">
+        <form method="get" class="us-filter-card" data-no-loading>
+          <input type="hidden" name="sort" value="{{ filters.sort }}">
+          <div class="mb-3">
+            <h6>Search</h6>
+            <input class="form-control form-control-sm" type="search" name="q" value="{{ filters.q }}" placeholder="Keyword…">
+          </div>
+          <div class="mb-3">
+            <h6>Category</h6>
+            <select class="form-select form-select-sm" name="category">
+              <option value="">All categories</option>
+              {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <h6>Condition</h6>
+            <select class="form-select form-select-sm" name="condition">
+              <option value="">Any condition</option>
+              {% for c in CONDITIONS %}<option value="{{ c }}" {{ 'selected' if filters.condition == c }}>{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <h6>Price (₹)</h6>
+            <div class="input-group input-group-sm">
+              <input class="form-control" type="number" min="0" step="1" name="min_price" value="{{ filters.min_price }}" placeholder="Min" aria-label="Minimum price">
+              <span class="input-group-text">–</span>
+              <input class="form-control" type="number" min="0" step="1" name="max_price" value="{{ filters.max_price }}" placeholder="Max" aria-label="Maximum price">
+            </div>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="include_sold" value="1" id="includeSold" {{ 'checked' if filters.include_sold }}>
+            <label class="form-check-label small" for="includeSold">Include sold items</label>
+          </div>
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-sm" type="submit">Apply filters</button>
+            {% if has_filters %}<a class="btn btn-light border btn-sm" href="{{ url_for('listings.browse') }}">Clear all</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <div class="col-lg-9">
+      {% if has_filters %}
+      <div class="d-flex flex-wrap gap-2 mb-3 small">
+        {% if filters.q %}<span class="us-chip active">“{{ filters.q }}” <a class="text-reset" href="{{ url_for('listings.browse', **dict(filters, q='')) }}" aria-label="Remove search"><i class="bi bi-x"></i></a></span>{% endif %}
+        {% if filters.category %}<span class="us-chip active">{{ filters.category }} <a class="text-reset" href="{{ url_for('listings.browse', **dict(filters, category='')) }}" aria-label="Remove category"><i class="bi bi-x"></i></a></span>{% endif %}
+        {% if filters.condition %}<span class="us-chip active">{{ filters.condition }} <a class="text-reset" href="{{ url_for('listings.browse', **dict(filters, condition='')) }}" aria-label="Remove condition"><i class="bi bi-x"></i></a></span>{% endif %}
+        {% if filters.min_price or filters.max_price %}<span class="us-chip active">₹{{ filters.min_price or '0' }} – {{ ('₹' ~ filters.max_price) if filters.max_price else 'any' }} <a class="text-reset" href="{{ url_for('listings.browse', **dict(filters, min_price='', max_price='')) }}" aria-label="Remove price"><i class="bi bi-x"></i></a></span>{% endif %}
+        {% if filters.include_sold %}<span class="us-chip active">Including sold <a class="text-reset" href="{{ url_for('listings.browse', **dict(filters, include_sold='')) }}" aria-label="Exclude sold"><i class="bi bi-x"></i></a></span>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if listings %}
+      <div class="row g-3 row-cols-2 row-cols-md-3">
+        {% for listing in listings %}
+        <div class="col">{{ listing_card(listing, is_fav=(listing.id in fav_ids)) }}</div>
+        {% endfor %}
+      </div>
+      {% if pagination.pages > 1 %}
+      <nav class="mt-4" aria-label="Listing pages">
+        <ul class="pagination justify-content-center">
+          <li class="page-item {{ 'disabled' if not pagination.has_prev }}"><a class="page-link" href="{{ url_for('listings.browse', page=pagination.prev_num, **filters) if pagination.has_prev else '#' }}">Previous</a></li>
+          {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if p %}<li class="page-item {{ 'active' if p == pagination.page }}"><a class="page-link" href="{{ url_for('listings.browse', page=p, **filters) }}">{{ p }}</a></li>
+            {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+          {% endfor %}
+          <li class="page-item {{ 'disabled' if not pagination.has_next }}"><a class="page-link" href="{{ url_for('listings.browse', page=pagination.next_num, **filters) if pagination.has_next else '#' }}">Next</a></li>
+        </ul>
+      </nav>
+      {% endif %}
+      {% else %}
+      {{ empty_state('bi-search', 'No listings match', 'Try a different keyword, widen the price range, or clear the filters.', url_for('listings.browse'), 'Clear filters') }}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

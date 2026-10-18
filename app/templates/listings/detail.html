@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card with context %}
+{% block title %}{{ listing.title }}{% endblock %}
+{% block content %}
+<div class="container">
+  <nav aria-label="breadcrumb" class="small mb-3">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('listings.browse') }}">Browse</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('listings.browse', category=listing.category) }}">{{ listing.category }}</a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 240px">{{ listing.title }}</li>
+    </ol>
+  </nav>
+
+  {% if listing.is_sold %}
+  <div class="alert alert-dark d-flex align-items-center gap-2"><i class="bi bi-bag-check-fill"></i><div><strong>This item has been sold.</strong> It's no longer available, but you can still browse similar listings below.</div></div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="position-relative">
+        {% if listing.is_sold %}<span class="us-badge-sold" style="top:1rem;left:1rem;font-size:.9rem">SOLD</span>{% endif %}
+        {% if listing.images %}
+        <img id="mainImage" class="us-gallery-main" src="{{ url_for('main.uploaded_file', filename=listing.images[0].filename) }}" alt="{{ listing.title }}">
+        {% else %}
+        <div class="us-gallery-main d-flex align-items-center justify-content-center text-secondary"><i class="bi bi-image" style="font-size:3rem"></i></div>
+        {% endif %}
+      </div>
+      {% if listing.images|length > 1 %}
+      <div class="d-flex gap-2 mt-2 flex-wrap" id="thumbs">
+        {% for img in listing.images %}
+        <img class="us-thumb {{ 'active' if loop.first }}" src="{{ url_for('main.uploaded_file', filename=img.filename) }}" alt="Photo {{ loop.index }}" data-full="{{ url_for('main.uploaded_file', filename=img.filename) }}">
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="us-panel mt-4">
+        <h2 class="h5 fw-600 mb-3">Description</h2>
+        <p class="us-description mb-0">{{ listing.description }}</p>
+      </div>
+
+      <div class="us-panel mt-3">
+        <h2 class="h5 fw-600 mb-3">Details</h2>
+        <dl class="us-kv mb-0">
+          <dt>Category</dt><dd><a href="{{ url_for('listings.browse', category=listing.category) }}">{{ listing.category }}</a></dd>
+          <dt>Condition</dt><dd>{{ listing.condition }}</dd>
+          <dt>College</dt><dd>{{ listing.college }}</dd>
+          {% if listing.location %}<dt>Pickup</dt><dd>{{ listing.location }}</dd>{% endif %}
+          <dt>Listed</dt><dd>{{ listing.created_at.strftime('%d %b %Y') }} <span class="text-secondary">({{ listing.created_at|timeago }})</span></dd>
+          <dt>Status</dt><dd>{% if listing.is_sold %}<span class="badge text-bg-dark">Sold</span>{% else %}<span class="badge text-bg-success">Available</span>{% endif %}</dd>
+          <dt>Listing ID</dt><dd class="text-secondary">#{{ listing.id }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="us-panel mb-3">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="us-detail-price">{{ listing.price|inr }}</div>
+          <span class="us-badge-condition mt-2">{{ listing.condition }}</span>
+        </div>
+        <h1 class="h4 fw-600 mt-1 mb-2">{{ listing.title }}</h1>
+        <div class="text-secondary small mb-3"><i class="bi bi-geo-alt me-1"></i>{{ listing.location or listing.college }}</div>
+
+        {% if is_owner %}
+        <div class="alert alert-light border small mb-3"><i class="bi bi-info-circle me-1"></i>This is your listing. Buyers will message you here on UniSphere.</div>
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary" href="{{ url_for('listings.edit', listing_id=listing.id) }}"><i class="bi bi-pencil me-1"></i>Edit listing</a>
+          <form method="post" action="{{ url_for('listings.toggle_status', listing_id=listing.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ 'available' if listing.is_sold else 'sold' }}">
+            <button type="submit" class="btn w-100 {{ 'btn-success' if listing.is_sold else 'btn-dark' }}">
+              {% if listing.is_sold %}<i class="bi bi-arrow-counterclockwise me-1"></i>Mark as available again{% else %}<i class="bi bi-bag-check me-1"></i>Mark as sold{% endif %}
+            </button>
+          </form>
+          <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash me-1"></i>Delete listing</button>
+        </div>
+        {% elif current_user.is_authenticated %}
+        <div class="d-grid gap-2">
+          {% if existing_conversation %}
+          <a class="btn btn-primary btn-lg" href="{{ url_for('chat.conversation', conversation_id=existing_conversation.id) }}"><i class="bi bi-chat-dots me-1"></i>Open chat with seller</a>
+          {% elif not listing.is_sold %}
+          <form method="post" action="{{ url_for('chat.start', listing_id=listing.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="form-label small text-secondary" for="firstMessage">Message the seller</label>
+            <textarea class="form-control mb-2" id="firstMessage" name="message" rows="2" maxlength="2000" placeholder="Hi! Is this still available?"></textarea>
+            <button type="submit" class="btn btn-primary btn-lg w-100" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label"><i class="bi bi-chat-dots me-1"></i>Chat with seller</span></button>
+          </form>
+          {% else %}
+          <button class="btn btn-secondary btn-lg" disabled><i class="bi bi-bag-check me-1"></i>Sold — chat closed</button>
+          {% endif %}
+          <form class="js-fav-form" method="post" action="{{ url_for('favourites.toggle', listing_id=listing.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-primary w-100 us-fav-btn position-static shadow-none rounded-3 {{ 'active' if is_fav }}" style="width:100%;height:auto;padding:.5rem" aria-pressed="{{ 'true' if is_fav else 'false' }}"><i class="bi bi-heart me-1"></i><span class="fav-label">{{ 'Saved' if is_fav else 'Save' }}</span></button>
+          </form>
+        </div>
+        {% else %}
+        <div class="d-grid gap-2">
+          <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login', next=request.path) }}"><i class="bi bi-chat-dots me-1"></i>Log in to chat with seller</a>
+          <a class="btn btn-outline-primary" href="{{ url_for('auth.login', next=request.path) }}"><i class="bi bi-heart me-1"></i>Log in to save</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="us-panel mb-3">
+        <h2 class="h6 fw-600 text-secondary text-uppercase small mb-3" style="letter-spacing:.05em">Seller</h2>
+        <div class="d-flex align-items-center gap-3">
+          <div class="us-avatar">{{ listing.seller.initials }}</div>
+          <div class="flex-grow-1">
+            <a href="{{ url_for('auth.public_profile', user_id=listing.seller.id) }}" class="fw-600 text-dark text-decoration-none">{{ listing.seller.full_name }}</a>
+            <div class="small text-secondary">{{ listing.seller.course }} · {{ listing.seller.year }}<br>{{ listing.seller.college }}</div>
+          </div>
+          <a class="btn btn-light border btn-sm" href="{{ url_for('auth.public_profile', user_id=listing.seller.id) }}">View</a>
+        </div>
+      </div>
+
+      <div class="us-panel small text-secondary">
+        <div class="fw-600 text-dark mb-2"><i class="bi bi-shield-check text-primary me-1"></i>Safety tips</div>
+        <ul class="mb-2 ps-3">
+          <li>Meet on campus in a public spot.</li>
+          <li>Inspect the item before paying.</li>
+          <li>Never pay in advance — UniSphere doesn't handle payments.</li>
+        </ul>
+        {% if current_user.is_authenticated and not is_owner %}
+        <a href="{{ url_for('reports.report_listing', listing_id=listing.id) }}" class="text-danger text-decoration-none"><i class="bi bi-flag me-1"></i>Report this listing</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if similar %}
+  <section class="mt-5">
+    <h2 class="us-section-title mb-3">Similar in {{ listing.category }}</h2>
+    <div class="row g-3 row-cols-2 row-cols-md-4">
+      {% for item in similar %}<div class="col">{{ listing_card(item, is_fav=(current_user.is_authenticated and current_user.has_favourited(item.id))) }}</div>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+{% if is_owner %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Delete listing?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">“{{ listing.title }}” and its images will be permanently removed. Conversations about it will also be deleted.</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('#thumbs .us-thumb').forEach(t => t.addEventListener('click', () => {
+    document.getElementById('mainImage').src = t.dataset.full;
+    document.querySelectorAll('#thumbs .us-thumb').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  }));
+</script>
+{% endblock %}

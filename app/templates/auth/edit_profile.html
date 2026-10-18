@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Edit profile{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-auth-card">
+    <h1 class="mb-1">Edit profile</h1>
+    <p class="text-secondary mb-4">Your name, course and college are shown to other students on your listings.</p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.first_name) }}</div>
+        <div class="col-sm-6">{{ field(form.last_name) }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.course) }}</div>
+        <div class="col-sm-6">{{ field(form.year) }}</div>
+      </div>
+      {{ field(form.college) }}
+      {{ field(form.phone, placeholder="+91 98765 43210") }}
+      {{ field(form.bio, placeholder="TY B.COM, selling last year's books. Available on campus 10–4.") }}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label">Save changes</span></button>
+        <a href="{{ url_for('auth.profile') }}" class="btn btn-light border">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

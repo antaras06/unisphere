@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state with context %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 900px">
+  <h1 class="h3 fw-700 mb-3"><i class="bi bi-chat-dots me-2 text-primary"></i>Messages</h1>
+  {% if items %}
+  <div class="border rounded-4 overflow-hidden">
+    {% for item in items %}{% with c = item.conversation, active_id = None %}{% include "chat/_conv_item.html" %}{% endwith %}{% endfor %}
+  </div>
+  {% else %}
+  {{ empty_state('bi-chat-left-dots', 'No conversations yet', 'Open any listing and tap “Chat with seller” to start a private conversation.', url_for('listings.browse'), 'Browse listings') }}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% macro listing_card(listing, is_fav=False, show_fav=True, remove_on_unsave=False, show_owner_actions=False) %}
+<div class="us-card {{ 'is-sold' if listing.is_sold }}" {% if remove_on_unsave %}data-fav-card{% endif %}>
+  {% if listing.is_sold %}<span class="us-badge-sold">SOLD</span>{% endif %}
+  {% if show_fav and current_user.is_authenticated and listing.seller_id != current_user.id %}
+  <form class="js-fav-form" method="post" action="{{ url_for('favourites.toggle', listing_id=listing.id) }}" data-login-url="{{ url_for('auth.login') }}" {% if remove_on_unsave %}data-remove-on-unsave="1"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="us-fav-btn {{ 'active' if is_fav }}" aria-pressed="{{ 'true' if is_fav else 'false' }}" aria-label="{{ 'Remove from favourites' if is_fav else 'Save to favourites' }}" title="{{ 'Remove from favourites' if is_fav else 'Save to favourites' }}"><i class="bi bi-heart"></i></button>
+  </form>
+  {% elif show_fav and not current_user.is_authenticated %}
+  <a class="us-fav-btn" href="{{ url_for('auth.login', next=request.full_path) }}" aria-label="Log in to save" title="Log in to save"><i class="bi bi-heart"></i></a>
+  {% endif %}
+  {% if listing.cover_image %}
+  <img class="us-card-img" src="{{ url_for('main.uploaded_file', filename=listing.cover_image.filename) }}" alt="{{ listing.title }}" loading="lazy">
+  {% else %}
+  <div class="us-card-img-placeholder"><i class="bi bi-image"></i></div>
+  {% endif %}
+  <div class="us-card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="us-card-price">{{ listing.price|inr }}</div>
+      <span class="us-badge-condition">{{ listing.condition }}</span>
+    </div>
+    <a class="us-card-title stretched-link" href="{{ url_for('listings.detail', listing_id=listing.id) }}">{{ listing.title }}</a>
+    <div class="us-card-meta mt-auto pt-1">
+      <i class="bi bi-geo-alt"></i>
+      <span class="text-truncate" style="max-width: 70%">{{ listing.location or listing.college }}</span>
+      <span class="ms-auto">{{ listing.created_at|timeago }}</span>
+    </div>
+  </div>
+  {% if show_owner_actions %}
+  <div class="d-flex gap-2 px-3 pb-3 position-relative" style="z-index: 3">
+    <a class="btn btn-outline-primary btn-sm flex-fill" href="{{ url_for('listings.edit', listing_id=listing.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+    <form method="post" action="{{ url_for('listings.toggle_status', listing_id=listing.id) }}" class="flex-fill">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="{{ 'available' if listing.is_sold else 'sold' }}">
+      <button class="btn btn-sm w-100 {{ 'btn-outline-success' if listing.is_sold else 'btn-dark' }}" type="submit">{{ 'Relist' if listing.is_sold else 'Mark sold' }}</button>
+    </form>
+    <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal{{ listing.id }}" aria-label="Delete listing"><i class="bi bi-trash"></i></button>
+  </div>
+  <div class="modal fade" id="deleteModal{{ listing.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Delete listing?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">“{{ listing.title }}” and its images will be permanently removed. Conversations about it will also be deleted.</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro field(f, placeholder='', help='', autofocus=False) %}
+<div class="mb-3">
+  {{ f.label(class="form-label fw-500") }}
+  {% set cls = "form-select" if f.type == "SelectField" else "form-control" %}
+  {{ f(class=cls + (" is-invalid" if f.errors else ""), placeholder=placeholder, autofocus=autofocus or None) }}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+  {% for err in f.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro empty_state(icon, title, text, cta_url=None, cta_label=None) %}
+<div class="us-empty">
+  <i class="bi {{ icon }}"></i>
+  <h5>{{ title }}</h5>
+  <p class="text-secondary mb-3">{{ text }}</p>
+  {% if cta_url %}<a class="btn btn-primary" href="{{ cta_url }}">{{ cta_label }}</a>{% endif %}
+</div>
+{% endmacro %}

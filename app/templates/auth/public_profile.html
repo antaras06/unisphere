@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card, empty_state with context %}
+{% block title %}{{ user.full_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-panel mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+      <div class="us-avatar us-avatar-lg">{{ user.initials }}</div>
+      <div class="flex-grow-1">
+        <h1 class="h3 fw-700 mb-1">{{ user.full_name }}</h1>
+        <div class="text-secondary small">
+          <span class="me-3"><i class="bi bi-mortarboard me-1"></i>{{ user.course }} · {{ user.year }}</span>
+          <span class="me-3"><i class="bi bi-building me-1"></i>{{ user.college }}</span>
+          <span><i class="bi bi-calendar3 me-1"></i>Member since {{ user.created_at.strftime('%b %Y') }}</span>
+        </div>
+        {% if user.bio %}<p class="mb-0 mt-2 small">{{ user.bio }}</p>{% endif %}
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <span class="badge text-bg-light border fw-500">{{ sold_count }} sold</span>
+        {% if current_user.is_authenticated and current_user.id != user.id %}
+        <a href="{{ url_for('reports.report_user', user_id=user.id) }}" class="btn btn-light border btn-sm text-danger"><i class="bi bi-flag me-1"></i>Report</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <h2 class="us-section-title mb-3">Listings by {{ user.first_name }} <span class="text-secondary fw-400">({{ listings|length }})</span></h2>
+  {% if listings %}
+  <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+    {% for listing in listings %}
+    <div class="col">{{ listing_card(listing, is_fav=(current_user.is_authenticated and current_user.has_favourited(listing.id))) }}</div>
+    {% endfor %}
+  </div>
+  {% else %}
+  {{ empty_state('bi-box-seam', 'No active listings', user.first_name ~ " hasn't got anything for sale right now.") }}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Create account{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-auth-card">
+    <h1 class="mb-1">Join UniSphere</h1>
+    <p class="text-secondary mb-4">Create your free student account. No college email or ID verification needed.</p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.first_name, placeholder="Aarav", autofocus=True) }}</div>
+        <div class="col-sm-6">{{ field(form.last_name, placeholder="Sharma") }}</div>
+      </div>
+      {{ field(form.email, placeholder="you@example.com") }}
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.course) }}</div>
+        <div class="col-sm-6">{{ field(form.year) }}</div>
+      </div>
+      {{ field(form.college, help="Pre-filled with NWCC — change it if you study elsewhere.") }}
+      {{ field(form.password, help="At least 8 characters, including a number.") }}
+      {{ field(form.confirm_password) }}
+      <button type="submit" class="btn btn-primary w-100 btn-lg mt-2" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label">Create account</span></button>
+    </form>
+    <p class="text-center small text-secondary mt-4 mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="fw-500">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

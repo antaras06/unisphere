@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card, empty_state with context %}
+{% block title %}My listings{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 fw-700 mb-0">My listings</h1>
+    <a href="{{ url_for('listings.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New listing</a>
+  </div>
+  <ul class="nav nav-pills mb-4 gap-1">
+    <li class="nav-item"><a class="nav-link {{ 'active' if status == 'all' }}" href="{{ url_for('listings.my_listings') }}">All</a></li>
+    <li class="nav-item"><a class="nav-link {{ 'active' if status == 'available' }}" href="{{ url_for('listings.my_listings', status='available') }}">Available</a></li>
+    <li class="nav-item"><a class="nav-link {{ 'active' if status == 'sold' }}" href="{{ url_for('listings.my_listings', status='sold') }}">Sold</a></li>
+  </ul>
+  {% if listings %}
+  <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+    {% for listing in listings %}<div class="col">{{ listing_card(listing, show_fav=False, show_owner_actions=True) }}</div>{% endfor %}
+  </div>
+  {% else %}
+  {{ empty_state('bi-box-seam', 'Nothing here yet' if status == 'all' else 'No ' ~ status ~ ' listings', 'Create a listing and it will show up here.', url_for('listings.create'), 'Sell an item') }}
+  {% endif %}
+</div>
+{% endblock %}

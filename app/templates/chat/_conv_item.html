@@ -1,0 +1,19 @@
+{% set other = c.other_party(current_user) %}
+{% set last = c.last_message %}
+{% set unread = c.unread_count_for(current_user) %}
+<a class="us-conv-item {{ 'active' if active_id == c.id }} {{ 'has-unread' if unread }}" href="{{ url_for('chat.conversation', conversation_id=c.id) }}">
+  {% if c.listing.cover_image %}
+  <img class="us-conv-thumb" src="{{ url_for('main.uploaded_file', filename=c.listing.cover_image.filename) }}" alt="">
+  {% else %}<div class="us-conv-thumb d-flex align-items-center justify-content-center text-secondary"><i class="bi bi-image"></i></div>{% endif %}
+  <div class="flex-grow-1 overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center gap-2">
+      <span class="us-conv-name text-truncate">{{ other.full_name }}</span>
+      <span class="small text-secondary text-nowrap">{{ (last.created_at if last else c.created_at)|timeago }}</span>
+    </div>
+    <div class="small text-truncate text-secondary">{{ c.listing.title }} · {{ c.listing.price|inr }}{% if c.listing.is_sold %} · <span class="text-dark fw-500">Sold</span>{% endif %}</div>
+    <div class="d-flex justify-content-between align-items-center gap-2">
+      <span class="us-conv-preview">{% if last %}{{ 'You: ' if last.sender_id == current_user.id }}{{ last.body }}{% else %}<em>No messages yet</em>{% endif %}</span>
+      {% if unread %}<span class="badge rounded-pill bg-primary">{{ unread }}</span>{% endif %}
+    </div>
+  </div>
+</a>

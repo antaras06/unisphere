@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other.full_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-chat-wrapper" id="chatRoot"
+       data-conversation-id="{{ conversation.id }}"
+       data-user-id="{{ current_user.id }}"
+       data-last-id="{{ messages[-1].id if messages else 0 }}"
+       data-poll-interval="{{ chat_poll_interval }}"
+       data-api-url="{{ url_for('chat.api_messages', conversation_id=conversation.id) }}">
+    <aside class="us-chat-sidebar">
+      <div class="p-3 border-bottom d-flex justify-content-between align-items-center"><span class="fw-600">Messages</span><a class="small" href="{{ url_for('chat.inbox') }}">All</a></div>
+      {% for c in sidebar %}{% with active_id = conversation.id %}{% include "chat/_conv_item.html" %}{% endwith %}{% endfor %}
+    </aside>
+    <section class="us-chat-main">
+      <div class="us-chat-header">
+        <button class="btn btn-light border btn-sm d-lg-none" id="toggleSidebar" aria-label="All conversations"><i class="bi bi-list"></i></button>
+        <div class="us-avatar us-avatar-sm">{{ other.initials }}</div>
+        <div class="flex-grow-1 overflow-hidden">
+          <div class="fw-600 text-truncate"><a href="{{ url_for('auth.public_profile', user_id=other.id) }}" class="text-dark text-decoration-none">{{ other.full_name }}</a>
+            <span class="text-secondary small fw-400">· {{ 'Buyer' if other.id == conversation.buyer_id else 'Seller' }}</span></div>
+          <a href="{{ url_for('listings.detail', listing_id=conversation.listing.id) }}" class="small text-truncate d-block text-decoration-none">
+            <i class="bi bi-tag me-1"></i>{{ conversation.listing.title }} · {{ conversation.listing.price|inr }}
+            {% if conversation.listing.is_sold %}<span class="badge text-bg-dark ms-1">Sold</span>{% endif %}
+          </a>
+        </div>
+        <span id="connStatus" class="badge rounded-pill text-bg-secondary">Connecting…</span>
+        {% if conversation.listing.cover_image %}
+        <a href="{{ url_for('listings.detail', listing_id=conversation.listing.id) }}"><img src="{{ url_for('main.uploaded_file', filename=conversation.listing.cover_image.filename) }}" class="us-conv-thumb d-none d-sm-block" alt=""></a>
+        {% endif %}
+      </div>
+      <div class="us-chat-messages" id="messageList">
+        {% if not messages %}
+        <div class="text-center text-secondary small my-auto" id="emptyChat"><i class="bi bi-chat-square-text d-block mb-2" style="font-size:2rem"></i>Say hello to {{ other.first_name }}. Ask if the item is still available or suggest a meeting spot.</div>
+        {% endif %}
+        {% set ns = namespace(day=None) %}
+        {% for m in messages %}
+          {% set d = m.created_at.strftime('%Y-%m-%d') %}
+          {% if d != ns.day %}{% set ns.day = d %}<div class="us-day-divider" data-ts="{{ m.created_at.isoformat() }}Z">{{ m.created_at.strftime('%d %b %Y') }}</div>{% endif %}
+          <div class="us-msg {{ 'mine' if m.sender_id == current_user.id else 'theirs' }}" data-id="{{ m.id }}" data-day="{{ d }}">{{ m.body }}<div class="us-msg-meta">{{ 'You' if m.sender_id == current_user.id else m.sender.first_name }} · <span data-ts="{{ m.created_at.isoformat() }}Z">{{ m.created_at.strftime('%H:%M') }}</span></div></div>
+        {% endfor %}
+      </div>
+      <div class="us-typing" id="typingIndicator"></div>
+      <form class="us-chat-form d-flex gap-2 align-items-end" id="messageForm" method="post" action="{{ url_for('chat.send_fallback', conversation_id=conversation.id) }}" data-no-loading>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea class="form-control" name="body" rows="1" maxlength="2000" placeholder="Type a message… (Enter to send, Shift+Enter for a new line)" required autofocus></textarea>
+        <button type="submit" class="btn btn-primary px-3" aria-label="Send"><i class="bi bi-send-fill"></i></button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/chat.js') }}"></script>{% endblock %}

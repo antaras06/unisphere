@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-auth-card">
+    <h1 class="mb-1">Welcome back</h1>
+    <p class="text-secondary mb-4">Log in to manage listings, favourites and messages.</p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.email, placeholder="you@example.com", autofocus=True) }}
+      {{ field(form.password) }}
+      <div class="form-check mb-3">{{ form.remember(class="form-check-input") }} {{ form.remember.label(class="form-check-label") }}</div>
+      <button type="submit" class="btn btn-primary w-100 btn-lg" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label">Log in</span></button>
+    </form>
+    <p class="text-center small text-secondary mt-4 mb-0">New to UniSphere? <a href="{{ url_for('auth.register') }}" class="fw-500">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

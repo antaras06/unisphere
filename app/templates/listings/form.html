@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}{{ 'Edit listing' if listing else 'Sell an item' }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 820px">
+  <h1 class="h3 fw-700 mb-1">{{ 'Edit listing' if listing else 'Sell an item' }}</h1>
+  <p class="text-secondary mb-4">{{ 'Update the details below.' if listing else 'Good photos and an honest description sell faster.' }}</p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="us-panel mb-3">
+      <h2 class="h6 fw-600 text-secondary text-uppercase small mb-3" style="letter-spacing:.05em">Photos</h2>
+      <div id="dropzone" class="us-dropzone mb-3" tabindex="0" role="button" data-max="{{ config.MAX_IMAGES_PER_LISTING }}" data-max-mb="{{ config.MAX_CONTENT_LENGTH // 1048576 }}">
+        <i class="bi bi-cloud-arrow-up text-primary" style="font-size:2rem"></i>
+        <div class="fw-500 mt-1">Click to upload or drag &amp; drop</div>
+        <div class="small text-secondary">JPG, PNG or WEBP · up to {{ config.MAX_IMAGES_PER_LISTING }} images · {{ config.MAX_CONTENT_LENGTH // 1048576 }} MB each</div>
+      </div>
+      {{ form.images(class="d-none", id="images", accept="image/jpeg,image/png,image/webp", multiple=True) }}
+      <div id="imageErrors" class="text-danger small mb-2 d-none"></div>
+      {% for err in form.images.errors %}<div class="text-danger small mb-2">{{ err }}</div>{% endfor %}
+      <div class="us-preview-grid" id="previewGrid">
+        {% if listing %}
+        {% for img in listing.images %}
+        <div class="us-preview" data-existing="1">
+          <img src="{{ url_for('main.uploaded_file', filename=img.filename) }}" alt="Existing photo {{ loop.index }}">
+          <input type="checkbox" name="remove_images" value="{{ img.id }}" class="d-none" id="rm{{ img.id }}">
+          <button type="button" class="us-preview-remove" data-toggle-remove aria-label="Remove image"><i class="bi bi-x-lg"></i></button>
+          {% if loop.first %}<span class="us-preview-label">Cover</span>{% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+      <div class="small text-secondary mt-2" id="imageCount"></div>
+    </div>
+
+    <div class="us-panel mb-3">
+      <h2 class="h6 fw-600 text-secondary text-uppercase small mb-3" style="letter-spacing:.05em">Item details</h2>
+      {{ field(form.title, placeholder="e.g. Financial Accounting – TY B.COM (Sem V), 2023 edition") }}
+      {{ field(form.description, placeholder="Edition, author, condition notes, highlights, what's included…") }}
+      <div class="row">
+        <div class="col-md-4">{{ field(form.price, placeholder="e.g. 350") }}</div>
+        <div class="col-md-4">{{ field(form.category) }}</div>
+        <div class="col-md-4">{{ field(form.condition) }}</div>
+      </div>
+    </div>
+
+    <div class="us-panel mb-4">
+      <h2 class="h6 fw-600 text-secondary text-uppercase small mb-3" style="letter-spacing:.05em">Location</h2>
+      <div class="row">
+        <div class="col-md-6">{{ field(form.college) }}</div>
+        <div class="col-md-6">{{ field(form.location, placeholder="e.g. NWCC campus, canteen · Camp, Pune", help="Where can buyers meet you?") }}</div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-lg px-4" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label">{{ form.submit.label.text }}</span></button>
+      <a href="{{ url_for('listings.detail', listing_id=listing.id) if listing else url_for('listings.my_listings') }}" class="btn btn-light border btn-lg">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/listing-form.js') }}"></script>{% endblock %}

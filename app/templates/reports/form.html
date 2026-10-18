@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Report{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="us-auth-card">
+    <h1 class="mb-1"><i class="bi bi-flag text-danger me-2"></i>Report {{ 'listing' if listing else 'user' }}</h1>
+    <p class="text-secondary mb-4">
+      {% if listing %}You're reporting <strong>“{{ listing.title }}”</strong> by {{ listing.seller.full_name }}.{% else %}You're reporting <strong>{{ reported_user.full_name }}</strong>.{% endif %}
+      Reports are private and reviewed by the UniSphere team.
+    </p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.reason) }}
+      {{ field(form.details, placeholder="Tell us what happened…") }}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger" data-loading><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span class="btn-label">Submit report</span></button>
+        <a href="{{ url_for('listings.detail', listing_id=listing.id) if listing else url_for('auth.public_profile', user_id=reported_user.id) }}" class="btn btn-light border">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
